@@ -1,23 +1,36 @@
 "use client"
 
+import { useState } from "react";
 import Image from "next/image";
+import useSWR from "swr";
+
+
+const fetcher = (...args) => fetch(...args).then(res => res.json())
 
 export default function Home() {
-  async function getDjangoAPIData(){
-    const response = await fetch("http://127.0.0.1:8000/api/hello");
-    const data = await response.json();
-    console.log(data)
-  }
+  // GET REQUESTS
+  const {data, error, isLoading} = useSWR("http://127.0.0.1:8000/api/hello",
+    fetcher)
+    if (error) return <div>Failed to load</div>
+    if (isLoading) return <div>Loading...</div>
 
-  async function handleClick(){
-    await getDjangoAPIData()
-  }
+  // const [data, setData] = useState({})
+  // async function getDjangoAPIData(){
+  //   const response = await fetch("http://127.0.0.1:8000/api/hello");
+  //   const responseData = await response.json();
+  //   //console.log(data)
+  //   setData(responseData)
+  // }
+
+  // async function handleClick(){
+  //   await getDjangoAPIData()
+  // }
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <button onClick={handleClick}>
-          Lookup Data
-        </button>
+        <div>
+          {JSON.stringify(data)}
+        </div>
         <Image
           className="dark:invert"
           src="https://nextjs.org/icons/next.svg"
