@@ -1,18 +1,17 @@
-// Import necessary modules
-import { getToken } from "@/app/lib/auth";
+const { cookies } = require("next/headers");
 import { NextResponse } from "next/server";
 
 const DJANGO_API_WAITLISTS_URL = "http://127.0.0.1:8000/api/waitlists/";
 
-// Async function to handle GET requests
 export async function GET(request) {
-    const authToken = getToken();
+    // Await the cookies retrieval
+    const authTokenCookie = await cookies();
+    const authToken = authTokenCookie.get('auth-token')?.value;
 
     if (!authToken) {
         return NextResponse.json({}, { status: 401 });
     }
 
-    // Options for the fetch request
     const options = {
         method: "GET",
         headers: {
@@ -23,14 +22,9 @@ export async function GET(request) {
     };
 
     try {
-        // Fetch data from the Django API
         const response = await fetch(DJANGO_API_WAITLISTS_URL, options);
         const result = await response.json();
-
-        const status = response.ok ? 200 : response.status;
-
-        // Return the result in JSON format
-        return NextResponse.json(result, { status });
+        return NextResponse.json(result, { status: response.ok ? 200 : response.status });
     } catch (error) {
         console.error("Error fetching data:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

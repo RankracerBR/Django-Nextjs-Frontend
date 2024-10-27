@@ -1,19 +1,19 @@
-const { cookies } = require("next/headers")
+const { cookies } = require("next/headers");
 
-const TOKEN_AGE = 3600
-const TOKEN_NAME = "auth-token"
-const TOKEN_REFRESH_NAME = "auth-refresh-token"
+const TOKEN_AGE = 3600;
+const TOKEN_NAME = "auth-token";
+const TOKEN_REFRESH_NAME = "auth-refresh-token";
 
-export function getToken(){
-    // api requests
-    const myAuthToken = cookies().get(TOKEN_NAME)
-    return myAuthToken?.value
+export async function getToken() {
+    const authTokenCookie = await cookies();
+    const authToken = authTokenCookie.get(TOKEN_NAME);
+    return authToken?.value;
 }
 
-export function getRefreshToken(){
-    // api requests
-    const myAuthToken = cookies().get(TOKEN_REFRESH_NAME)
-    return myAuthToken?.value
+export async function getRefreshToken() {
+    // Use await to get cookies asynchronously
+    const myAuthToken = await cookies().get(TOKEN_REFRESH_NAME);
+    return myAuthToken?.value;
 }
 
 export function setToken(authToken){
