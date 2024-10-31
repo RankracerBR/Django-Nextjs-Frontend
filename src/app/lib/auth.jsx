@@ -11,37 +11,37 @@ export async function getToken() {
 }
 
 export async function getRefreshToken() {
-    // Use await to get cookies asynchronously
-    const myAuthToken = await cookies().get(TOKEN_REFRESH_NAME);
+    const authTokenCookie = await cookies();
+    const myAuthToken = await authTokenCookie.get(TOKEN_REFRESH_NAME);
     return myAuthToken?.value;
 }
 
-export function setToken(authToken){
-    // login
-    return cookies().set({
+export async function setToken(authToken) {
+    const authTokenCookie = await cookies();
+    await authTokenCookie.set({
         name: TOKEN_NAME,
         value: authToken,
-        httpOnly: true, // limit client-side js
+        httpOnly: true, // limit client-side JS access
         sameSite: 'strict',
         secure: process.env.NODE_ENV !== 'development',
         maxAge: TOKEN_AGE,
-    })
+    });
 }
 
-export function setRefreshToken(authRefreshToken){
-    // login
-    return cookies().set({
+export async function setRefreshToken(authRefreshToken) {
+    const authTokenCookie = await cookies();
+    await authTokenCookie.set({
         name: TOKEN_REFRESH_NAME,
         value: authRefreshToken,
-        httpOnly: true, // limit client-side js
+        httpOnly: true, // limit client-side JS access
         sameSite: 'strict',
         secure: process.env.NODE_ENV !== 'development',
         maxAge: TOKEN_AGE,
-    })
+    });
 }
 
-export function deleteTokens(){
-    // logout
-    cookies().delete(TOKEN_REFRESH_NAME)
-    return cookies().delete(TOKEN_NAME)
+export async function deleteTokens() {
+    const authTokenCookie = await cookies();
+    await authTokenCookie.delete(TOKEN_REFRESH_NAME);
+    await authTokenCookie.delete(TOKEN_NAME);
 }

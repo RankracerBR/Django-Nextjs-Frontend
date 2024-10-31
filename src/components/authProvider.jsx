@@ -1,7 +1,6 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { createContext, useContext, useState, useEffect } from "react";
 
 const AuthContext = createContext({
@@ -10,54 +9,73 @@ const AuthContext = createContext({
   logout: () => {}
 });
 
-const LOGIN_REDIRECT_URL = "/"
-const LOGOUT_REDIRECT_URL = "/logout"
-const LOGIN_REQUIRED_URL = "/login"
-
-const LOCAL_STORAGE_KEY = "is-logged-in"
+const LOGIN_REDIRECT_URL = "/";
+const LOGOUT_REDIRECT_URL = "/login";
+const LOGIN_REQUIRED_URL = "/login";
+const LOCAL_STORAGE_KEY = "is-logged-in";
 
 export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const router = useRouter()
-  const pathname = usePathname()
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-  // On initial render, check if the user is already logged in
+  // Check if user is logged in on initial render
   useEffect(() => {
-    const storedAuthState = localStorage.getItem
-    (LOCAL_STORAGE_KEY);
+    const storedAuthState = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (storedAuthState) {
-       const storedAuthStatusInt = parseInt
-       (storedAuthState)
-       setIsAuthenticated(storedAuthStatusInt === 1);
+      const storedAuthStatusInt = parseInt(storedAuthState);
+      setIsAuthenticated(storedAuthStatusInt === 1);
     }
-  }, []);
+  }, [pathname, searchParams]);
 
   const login = () => {
     setIsAuthenticated(true);
     localStorage.setItem(LOCAL_STORAGE_KEY, "1");
-    router.replace(LOGIN_REDIRECT_URL)
+
+    const nextUrl = searchParams.get("next") || "/" 
+    const invalidNextUrl = ["/login", "/logout"];
+    const nextUrlValid = nextUrl && nextUrl.startsWith("/") && !invalidNextUrl.includes(nextUrl);
+  
+    // Log current values for debugging
+    console.log("Current pathname:", pathname);
+    console.log("Current searchParams:", searchParams.toString());
+    console.log("Next URL:", nextUrl);
+    console.log("Is next URL valid?", nextUrlValid);
+
+    if (nextUrlValid){
+      router.replace(nextUrl)
+      return
+    } else {
+      router.replace(LOGIN_REDIRECT_URL)
+      return
+    }
   };
 
   const logout = () => {
     setIsAuthenticated(false);
     localStorage.setItem(LOCAL_STORAGE_KEY, "0");
-    router.replace(LOGOUT_REDIRECT_URL)
+
+    console.log("Redirecting to logout URL:", LOGOUT_REDIRECT_URL);
+    router.replace(LOGOUT_REDIRECT_URL);
   };
 
   const loginRequiredRedirect = () => {
-    // user is not logged in via API
+    // User is not logged in; redirect to login
     setIsAuthenticated(false);
     localStorage.setItem(LOCAL_STORAGE_KEY, "0");
-    let loginWithNextUrl = `${LOGIN_REDIRECT_URL}?next=${pathname}`
-    if (LOGIN_REQUIRED_URL === pathname){
-        loginWithNextUrl = `${LOGIN_REQUIRED_URL}`
+
+    let loginWithNextUrl = `${LOGIN_REDIRECT_URL}?next=${pathname}`;
+    if (LOGIN_REQUIRED_URL === pathname) {
+      loginWithNextUrl = `${LOGIN_REQUIRED_URL}`;
     }
-    router.replace(LOGIN_REQUIRED_URL)
+
+    console.log("Redirecting to login required URL:", loginWithNextUrl);
+    router.replace(loginWithNextUrl);
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login,
-     logout, loginRequiredRedirect }}>
+    <AuthContext.Provider value={{ isAuthenticated, login, logout, loginRequiredRedirect }}>
       {children}
     </AuthContext.Provider>
   );

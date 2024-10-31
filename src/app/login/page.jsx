@@ -1,6 +1,5 @@
 "use client"
 import { useAuth } from "@/components/authProvider"
-import { useRouter } from "next/navigation"
 
 const LOGIN_URL = "/api/login/"
 
