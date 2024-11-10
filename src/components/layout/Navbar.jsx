@@ -5,7 +5,7 @@ import { useAuth } from "../authProvider"
 import NavLinks, {NonUserLinks} from './NavLinks'
 import BrandLink from "./BrandLink"
 import MobileNavbar from "./MobileNavbar"
-import AccountDropdown from "./AccountDropdown"
+import AccountDropdown from "./AccountDropDown"
 
 
 export default function Navbar({className}) {
