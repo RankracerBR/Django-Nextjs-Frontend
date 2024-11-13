@@ -26,38 +26,42 @@ export async function GET(request) {
 }
 
 export async function POST(request){
-    const requestData = await request.json()
-    const jsonData = JSON.stringify(requestData)
-    let headers = {
+    const requestData = await request.json();
+    const authToken = await getToken();
+
+    const headers = {
         "Content-Type": "application/json",
         "Accept": "application/json",
-    }
-    const authToken = getToken()
-    if(authToken){
-        headers["Authorization"] = `Bearer ${authToken}`
-    }
-    const requestOptions = {
+        ...(authToken && { "Authorization": `Bearer ${authToken}` }),
+    };
+
+    const response = await fetch(DJANGO_API_WAITLISTS_URL, {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: jsonData
-    }
-    const response = await fetch(DJANGO_API_WAITLISTS_URL, requestOptions)
-    console.log(response.status)
-    try{
-        const responseData = await response.json()
-        console.log(responseData)
-    } catch (error){
-        NextResponse.json({message: "Invalid request."},
-            {status: response.status}
-        )
+        headers: headers,
+        body: JSON.stringify(requestData),
+    });
+
+    if (response.ok) {
+        return NextResponse.json(await response.json(), { status: 200 });
     }
 
-    if (response.ok){
-        return NextResponse.json({}, {status: 200})
-    }
-    return NextResponse.json({}, {status: 400})
+    if (response.status === 401 && authToken) {
+        const newToken = await fetchNewToken();
+        if (newToken) {
+            // Retry request with new token
+            headers["Authorization"] = `Bearer ${newToken}`;
+            const retryResponse = await fetch(DJANGO_API_WAITLISTS_URL, {
+                method: "POST",
+                headers: headers,
+                body: JSON.stringify(requestData),
+            });
 
+            if (retryResponse.ok) {
+                return NextResponse.json(await retryResponse.json(), { status: 200 });
+            }
+        }
+    }
+
+    return NextResponse.json({ message: "Invalid request." }, { status: response.status });
 }
 

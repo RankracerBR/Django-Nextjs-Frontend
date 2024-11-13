@@ -4,10 +4,34 @@ const TOKEN_AGE = 3600;
 const TOKEN_NAME = "auth-token";
 const TOKEN_REFRESH_NAME = "auth-refresh-token";
 
+
+// Fetch a new access token if expired
+async function fetchNewToken() {
+    const refreshToken = await getRefreshToken();
+    if (!refreshToken) return null;
+
+    // Call Django API to refresh the token
+    const response = await fetch("http://127.0.0.1:8000/api/token/refresh/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh: refreshToken }),
+    });
+
+    if (response.ok) {
+        const data = await response.json();
+        await setToken(data.access);
+        return data.access;
+    }
+    return null;
+}
+
+
 export async function getToken() {
-    const authTokenCookie = await cookies();
-    const authToken = authTokenCookie.get(TOKEN_NAME);
-    return authToken?.value;
+    let authToken = (await cookies()).get(TOKEN_NAME)?.value;
+    if (!authToken) {
+        authToken = await fetchNewToken(); // Refresh token if necessary
+    }
+    return authToken;
 }
 
 export async function getRefreshToken() {
