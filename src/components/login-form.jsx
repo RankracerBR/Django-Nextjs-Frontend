@@ -29,13 +29,18 @@ export function LoginForm() {
           body: jsonData
       }
       const response = await fetch(LOGIN_URL, requestOptions)
-      const data = await response.json()
-      console.log(data)
+      let data = {}
+      try {
+        data = await response.json()
+      } catch (error){
+
+      }
+
       if (response.ok){
           console.log("logged-in")
-          auth.login();
+          auth.login(data?.username);
       } else {
-        console.log(response)
+        console.log(await response.json())
       }
   }
 
